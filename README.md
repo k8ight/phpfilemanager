@@ -10,6 +10,7 @@ It provides a web interface for browsing directories, viewing supported files, e
 
 - [x] **File and directory browsing** – Browse directory contents through the browser.
 - [x] **Directory navigation** – Open directories using the `dir` request parameter.
+- [x] **Configurable root directory** – Set the directory managed by the file manager in the PHP configuration.
 - [x] **File information** – View file type, size, permissions and modification date.
 - [x] **File preview** – Preview supported image, audio, video and PDF files.
 - [x] **Text and source-code editor** – Edit supported text and code files with CodeMirror.
@@ -65,14 +66,6 @@ Example:
 https://your-domain.com/phpfilemanager/
 ```
 
-The application uses the requested directory parameter for navigation. For example:
-
-```text
-https://your-domain.com/phpfilemanager/?dir=./some-directory
-```
-
-Use only directories that the PHP process is intended and permitted to access. Filesystem permissions and the path validation performed by each operation determine which actions can be completed.
-
 ## Project Structure
 
 ```text
@@ -88,16 +81,31 @@ The current application keeps its PHP request handlers and page-level JavaScript
 
 ## Configuration
 
-The feature configuration is defined near the beginning of `index.php`:
+The configuration is defined near the beginning of `index.php`:
 
 ```php
 $config = [
+    "dir"         => __DIR__,
     "editor"      => true,
     "viewer"      => true,
     "create_file" => true,
     "delete_file" => true
 ];
+
+chdir($config['dir']);
 ```
+
+### Root directory
+
+The `dir` option sets the file manager's starting/root directory.
+
+- By default, `__DIR__` uses the directory containing `index.php`.
+- You can provide another absolute filesystem path, for example `"/var/www/example/public_html"`.
+- `chdir($config['dir'])` changes PHP's current working directory for that request. This allows the existing relative directory operations and folder navigation to work from the configured root.
+
+Make sure the PHP process has the required permissions for the configured directory. The configured path should exist and be a directory.
+
+### Feature options
 
 | Option | Description |
 |---|---|
@@ -125,7 +133,13 @@ An internet connection is therefore required for the CDN-hosted dependencies unl
 
 The main browser lists files and directories and displays available metadata such as type, permissions, size and modification date.
 
-Directory navigation uses the `dir` request parameter. The current directory is rendered by the PHP file browser; the search box filters the rows currently present in the page using JavaScript.
+Directory navigation uses the `dir` request parameter relative to the configured root directory. For example, to open a subdirectory named `uploads`:
+
+```text
+https://your-domain.com/phpfilemanager/?dir=uploads
+```
+
+The current directory is rendered by PHP; the search box filters the rows currently present in the page using JavaScript.
 
 The application should be deployed with filesystem permissions appropriate to the directories that the PHP process is expected to manage. Do not assume that hiding a directory in the interface makes it inaccessible.
 
@@ -195,7 +209,7 @@ Before production deployment:
 5. Keep backups of files that may be edited or deleted.
 6. Disable features that are not required by setting their configuration options to `false`.
 7. Keep PHP error display disabled in production and send errors to server logs.
-8. Review and test path validation for every filesystem operation before allowing access to directories outside the application directory.
+8. Review and test path validation for every filesystem operation, especially when configuring a root directory outside the application directory.
 
 The feature configuration array does not provide user authentication, authorization, or CSRF protection. Add appropriate access control and request protection at the application or web-server layer before public deployment.
 
