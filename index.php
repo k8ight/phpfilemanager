@@ -416,6 +416,74 @@ if (empty($config['editor'])) {
     exit;
 }
 
+/* ---------------- PHP SOURCE PREVIEW API ----------------
+   GET index.php?k8_action=source&file=relative/path.php
+---------------------------------------------------------- */
+if (
+    $_SERVER['REQUEST_METHOD'] === 'GET' &&
+    ($_GET['k8_action'] ?? '') === 'source'
+) {
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Content-Type: text/plain; charset=utf-8');
+
+    if (empty($config['viewer'])) {
+        http_response_code(403);
+        exit('File viewing is disabled.');
+    }
+
+    $relative = str_replace('\\\\', '/', (string)($_GET['file'] ?? ''));
+    $relative = trim($relative);
+
+    if (
+        $relative === '' ||
+        str_contains($relative, "\\0") ||
+        str_starts_with($relative, '/') ||
+        preg_match('#^[A-Za-z]:#', $relative) ||
+        preg_match('#(^|/)\\.\\.?(/|$)#', $relative)
+    ) {
+        http_response_code(400);
+        exit('Invalid file path.');
+    }
+
+    $root = realpath($config['dir']);
+    $target = $root
+        ? realpath($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative))
+        : false;
+
+    if (
+        !$root ||
+        !$target ||
+        !is_file($target) ||
+        !is_readable($target) ||
+        !str_starts_with($target, $root . DIRECTORY_SEPARATOR)
+    ) {
+        http_response_code(404);
+        exit('Source file not found.');
+    }
+
+    $allowedExtensions = ['php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'inc'];
+    if (!in_array(strtolower(pathinfo($target, PATHINFO_EXTENSION)), $allowedExtensions, true)) {
+        http_response_code(403);
+        exit('Source preview is available only for PHP files.');
+    }
+
+    $size = filesize($target);
+    if ($size === false || $size > 2 * 1024 * 1024) {
+        http_response_code(413);
+        exit('Source file is too large to preview (maximum 2 MB).');
+    }
+
+    $source = file_get_contents($target);
+    if ($source === false) {
+        http_response_code(500);
+        exit('Unable to read source file.');
+    }
+
+    echo $source;
+    exit;
+}
+
 
 ?>
 <!DOCTYPE html>
@@ -1980,18 +2048,11 @@ K8_CONFIG?.viewer === true;
     // PHP source requires your configured source endpoint
     if (isPHP) {
 
-        const sourceEndpoint = window.K8_FILE_SOURCE_ENDPOINT;
-
-        if (!sourceEndpoint) {
-            editor.value =
-                'PHP source preview requires a dedicated authenticated source endpoint.';
-            saveStatus.textContent = 'Source unavailable';
-            return;
-        }
-
         try {
-            const sourceURL = new URL(sourceEndpoint, location.href);
-            sourceURL.searchParams.set('file', url.pathname);
+            // PHP source is served by the API handler in this same index.php.
+            const sourceURL = new URL(location.pathname, location.href);
+            sourceURL.searchParams.set('k8_action', 'source');
+            sourceURL.searchParams.set('file', file);
 
             const response = await fetch(sourceURL.href, {
                 credentials: 'same-origin',
