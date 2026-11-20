@@ -993,12 +993,13 @@ if(is_dir($dir))
 	$filx = pathinfo($dir);
 	
 	$name=$filx['filename'];
+	$basename=$filx['basename'];
 	$extention=$filx['extension'] ?? $name.'-File';
 	$time=filemtime($filx['dirname'].'/'.$filx['basename']);
 	$modtime= date("F d Y",$time);
 	$dirx=explode("/",$dir)[1];
 	$sizx=filesize($filx['dirname'].'/'.$filx['basename']);
-	if(!in_array($name,$blocked)){
+	if(!in_array($name,$blocked) || !in_array($extention,$blocked) || !in_array($basename,$blocked)){
     $fil[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>pfs($sizx),'ext'=>$extention,"modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
 }}
 }
