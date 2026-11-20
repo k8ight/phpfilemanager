@@ -9,6 +9,10 @@ $config=[
 "create_file"=>true,
 "delete_file"=>true
 ]; //"viewer"=true; means file musing video img view using openeditor editor  also textarea will be readonly unless editor is true (save button also render ins this case of editor true else no save button )
+//block by extention filename or full name folder name
+$blocked=[];
+
+
 if (!is_dir($config['dir']) || !chdir($config['dir'])) {
     die('Unable to change to file manager directory.');
 }
@@ -937,7 +941,7 @@ if(isset($_REQUEST['dir'])){
     $directory ="./";
 }
 $cdir=rtrim($directory,"/");
-$blocked=[];
+
 ?>
 <body style="overflow-x:scroll">
 <div class="k8-card k8-white k8-center k8-border k8-row nff" >
