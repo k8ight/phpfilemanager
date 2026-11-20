@@ -432,12 +432,12 @@ if (
         exit('File viewing is disabled.');
     }
 
-    $relative = str_replace('\\\\', '/', (string)($_GET['file'] ?? ''));
+    $relative = str_replace('\\', '/', (string)($_GET['file'] ?? ''));
     $relative = trim($relative);
 
     if (
         $relative === '' ||
-        str_contains($relative, "\\0") ||
+        str_contains($relative, "\0") ||
         str_starts_with($relative, '/') ||
         preg_match('#^[A-Za-z]:#', $relative) ||
         preg_match('#(^|/)\\.\\.?(/|$)#', $relative)
