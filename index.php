@@ -937,7 +937,7 @@ if(isset($_REQUEST['dir'])){
     $directory ="./";
 }
 $cdir=rtrim($directory,"/");
-$blocked=array("index");
+$blocked=[];
 ?>
 <body style="overflow-x:scroll">
 <div class="k8-card k8-white k8-center k8-border k8-row nff" >
@@ -998,7 +998,7 @@ if(is_dir($dir))
 	$modtime= date("F d Y",$time);
 	$dirx=explode("/",$dir)[1];
 	$sizx=filesize($filx['dirname'].'/'.$filx['basename']);
-	if(!preg_match('/index/',$name)){
+	if(!in_array($name,$blocked)){
     $fil[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>pfs($sizx),'ext'=>$extention,"modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
 }}
 }
