@@ -118,16 +118,29 @@ Set an option to `false` to disable the corresponding feature. These settings ar
 
 ## Frontend Dependencies
 
-| Library | Purpose |
-|---|---|
-| Font Awesome Free 6.4.2 | Icons |
-| CodeMirror 5.65.16 | Text and source-code editing |
-| K8 CSS | Application styling |
-| K8 JS | Modal and UI functions |
+| Library | Version | Purpose |
+|---|---:|---|
+| Font Awesome Free | 6.4.2 | Icons |
+| CodeMirror | 5.65.16 | Text and source-code editing |
+| K8 CSS | Local | Application styling |
+| K8 JS | Local | Modal and UI functions |
 
 Font Awesome and CodeMirror are loaded from CDNs. The K8 CSS and JavaScript files are included locally in the project.
 
 An internet connection is therefore required for the CDN-hosted dependencies unless you change the page to use local copies.
+
+## Third-Party Licenses
+
+This repository is licensed under GPL-3.0. The frontend libraries used by the project retain their own licenses:
+
+- **CodeMirror 5.65.16** — MIT License. See the [CodeMirror repository](https://github.com/codemirror/codemirror5).
+- **Font Awesome Free 6.4.2** — Font Awesome Free uses multiple licenses depending on the asset type:
+  - **Icons** (SVG and JavaScript icon files): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+  - **Fonts** (web and desktop font files): [SIL Open Font License 1.1](https://scripts.sil.org/OFL).
+  - **Code** (CSS and other non-font, non-icon files): [MIT License](https://opensource.org/licenses/MIT).
+  - See the [official Font Awesome Free license](https://fontawesome.com/license/free) for details.
+
+Keep the applicable copyright and license notices when redistributing third-party assets. Font Awesome brand icons may represent their respective trademark owners and should only be used to identify those brands.
 
 ## File Browser and Navigation
 
