@@ -435,6 +435,9 @@ if (
     $relative = str_replace('\\', '/', (string)($_GET['file'] ?? ''));
     $relative = trim($relative);
 
+    // File links in the browser may begin with ./; normalize that prefix.
+    $relative = preg_replace('#^(?:\./)+#', '', $relative);
+
     if (
         $relative === '' ||
         str_contains($relative, "\0") ||
