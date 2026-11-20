@@ -1,85 +1,94 @@
 # PHP File Manager
 
-A lightweight, web-based PHP file manager with a clean interface powered by **Font Awesome Free** and the K8 UI framework.
+A lightweight, browser-based file manager built with PHP, the K8 UI framework, Font Awesome Free and CodeMirror.
 
-Browse and manage files and directories directly from your web browser without requiring a separate desktop application.
+It provides a web interface for browsing directories, viewing supported files, editing text and source files, creating entries and deleting files or folders.
 
 ## Features
 
 ### Available
 
-- [x] **File Browsing** – Browse files and directories through a web interface.
-- [x] **File Information** – View file sizes, permissions, types and modification dates.
-- [x] **File Preview** – Preview supported media and document formats.
-- [x] **Code Editor** – Edit supported text and source-code files using CodeMirror.
-- [x] **Read-only Mode** – Configure the editor and viewer independently.
-- [x] **Create Files** – Create new files, including extensionless files.
-- [x] **Create Folders** – Create directories in the current location.
-- [x] **Recursive Delete** – Delete files and directories, including nested contents, with a confirmation preview.
-- [x] **Directory Size** – Calculate recursive directory sizes.
-- [x] **File Permissions** – View file and directory permissions.
-- [x] **File Upload** – Upload files through the web interface.
-- [x] **Directory Search** – Search files and folders in the current directory using JavaScript.
-- [x] **Configurable Features** – Enable or disable individual file manager features.
+- [x] **File and directory browsing** – Browse directory contents through the browser.
+- [x] **Directory navigation** – Open directories using the `dir` request parameter.
+- [x] **File information** – View file type, size, permissions and modification date.
+- [x] **File preview** – Preview supported image, audio, video and PDF files.
+- [x] **Text and source-code editor** – Edit supported text and code files with CodeMirror.
+- [x] **Read-only mode** – Disable editing while retaining supported viewing functionality.
+- [x] **Create files** – Create files, including files without an extension.
+- [x] **Create folders** – Create directories in the current location.
+- [x] **Recursive deletion** – Review a file or folder and its contents before permanent deletion.
+- [x] **Directory size information** – Display recursive directory size in the deletion preview.
+- [x] **File permissions** – Display filesystem permission information.
+- [x] **Current-directory search** – Filter the currently displayed table using JavaScript.
+- [x] **Configurable features** – Enable or disable editor, viewer, creation and deletion features.
 
-### In Development
+### In development
 
-- [ ] **System-wide Search** – Indexed search across directories and files, beyond the currently opened directory.
+- [ ] **System-wide indexed search** – Search across directories and files beyond the currently displayed directory.
+
+> **Note:** The current search field filters only the rows already rendered for the open directory. It does not perform a server-side or system-wide search.
 
 ## Screenshots
 
-Add screenshots of the file manager interface here.
+Screenshots can be added to a `screenshots/` directory and linked here.
 
-```text
-screenshots/
-├── file-browser.png
-├── file-preview.png
-├── code-editor.png
-├── create-entry.png
-└── delete-confirmation.png
-```
+Suggested screenshots:
+
+- File browser
+- File preview
+- Code editor
+- Create file/folder dialog
+- Recursive delete confirmation
 
 ## Requirements
 
 - PHP 8.0 or newer
-- Web server (Apache, Nginx, etc.)
-- PHP filesystem permissions for the directories you want to manage
-- Internet connection for CDN-hosted frontend dependencies
+- Apache, Nginx or another PHP-compatible web server
+- PHP filesystem permissions appropriate for the directories being managed
+- Internet access for the CDN-hosted frontend libraries
+
+The web server's PHP process must have the required read, write and directory permissions for the operations you enable.
 
 ## Installation
 
-1. Clone or download this repository.
+Clone the repository:
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/k8ight/phpfilemanager.git
 ```
 
-2. Copy the project files into your web server's document root.
+Place the project directory in a location served by your web server. Ensure the required local assets are present, then open the corresponding URL in a browser.
 
-3. Ensure the PHP process has the necessary filesystem permissions.
-
-4. Open the file manager through your browser.
+Example:
 
 ```text
-https://your-domain.com/filemanager/
+https://your-domain.com/phpfilemanager/
 ```
+
+The application uses the requested directory parameter for navigation. For example:
+
+```text
+https://your-domain.com/phpfilemanager/?dir=./some-directory
+```
+
+Use only directories that the PHP process is intended and permitted to access. Filesystem permissions and the path validation performed by each operation determine which actions can be completed.
 
 ## Project Structure
 
 ```text
 phpfilemanager/
-├── index.php       # Main application
+├── index.php       # Main application and request handlers
 ├── k8.css          # K8 UI stylesheet
-├── k8.js           # K8 UI JavaScript
+├── k8.js           # K8 UI JavaScript and modal functions
 ├── favicon.ico     # Optional browser icon
 └── README.md
 ```
 
-The application does not require separate local PHP API files or JavaScript modules for its current features.
+The current application keeps its PHP request handlers and page-level JavaScript in `index.php`; it does not require separate local API files for the documented core features.
 
 ## Configuration
 
-Features can be enabled or disabled through the configuration array in `index.php`.
+The feature configuration is defined near the beginning of `index.php`:
 
 ```php
 $config = [
@@ -92,56 +101,112 @@ $config = [
 
 | Option | Description |
 |---|---|
-| `editor` | Enables or disables file editing and saving. |
-| `viewer` | Enables or disables supported file previews. |
+| `editor` | Enables or disables editing and saving supported text/source files. |
+| `viewer` | Enables or disables supported media and document previews. |
 | `create_file` | Enables or disables file and folder creation. |
 | `delete_file` | Enables or disables file and folder deletion. |
 
-Set an option to `false` to disable that feature.
+Set an option to `false` to disable the corresponding feature. These settings are feature switches; they are **not** a replacement for authentication or access control.
 
 ## Frontend Dependencies
-
-The project uses the following frontend libraries:
 
 | Library | Purpose |
 |---|---|
 | Font Awesome Free 6.4.2 | Icons |
-| K8 CSS | Interface styling |
+| CodeMirror 5.65.16 | Text and source-code editing |
+| K8 CSS | Application styling |
 | K8 JS | Modal and UI functions |
-| CodeMirror 5.65.16 | Source-code editing |
 
-Font Awesome and CodeMirror are loaded from external CDNs. K8 CSS and K8 JS are included locally.
+Font Awesome and CodeMirror are loaded from CDNs. The K8 CSS and JavaScript files are included locally in the project.
 
-## Search
+An internet connection is therefore required for the CDN-hosted dependencies unless you change the page to use local copies.
 
-### Current Directory Search
+## File Browser and Navigation
 
-The current search feature uses JavaScript to filter the files and folders displayed in the currently opened directory.
+The main browser lists files and directories and displays available metadata such as type, permissions, size and modification date.
 
-### System-wide Indexed Search
+Directory navigation uses the `dir` request parameter. The current directory is rendered by the PHP file browser; the search box filters the rows currently present in the page using JavaScript.
 
-A broader search system is planned to index files and directories across the managed filesystem. This feature is currently under development.
+The application should be deployed with filesystem permissions appropriate to the directories that the PHP process is expected to manage. Do not assume that hiding a directory in the interface makes it inaccessible.
+
+## File Viewer and Editor
+
+The viewer supports browser-previewable formats, including:
+
+- Images
+- Audio files
+- Video files
+- PDF documents
+
+Supported text and source-code files can be opened in the CodeMirror editor.
+
+When `editor` is disabled, the editor is read-only and the save control is not provided. When `viewer` is disabled, supported media previews are disabled. These options are independent.
+
+### PHP source files
+
+PHP files are executed by the web server when requested normally. The browser viewer does not obtain PHP source code from that normal response.
+
+The editor contains an optional integration point named `window.K8_FILE_SOURCE_ENDPOINT` for a separate source-reading endpoint. Configure that endpoint only if you have implemented and secured it. It is not included as a standalone endpoint in this repository.
+
+## Create Files and Folders
+
+The create dialog provides separate actions for:
+
+- Creating a file
+- Creating a folder
+
+File names can be extensionless. Creation is handled by the PHP request handler in `index.php` and is controlled by the `create_file` configuration option.
 
 ## Recursive Deletion
 
-The delete feature supports both files and directories.
+The delete action supports files and directories. Before deletion, the confirmation dialog requests a recursive preview and displays the discovered contents and summary information, including:
 
-Before deleting a directory, the confirmation window displays:
+- File and folder counts
+- Symbolic-link count
+- Individual file sizes
+- Total size of regular files in the selected tree
 
-- Recursive directory contents.
-- File and folder counts.
-- Individual file sizes.
-- Total directory size.
-- Symbolic links.
+Deletion is permanent. There is no recycle bin or automatic restore function. Check the selected path and preview carefully before confirming.
 
-Deletion is permanent. The application does not provide a recycle bin or automatic recovery.
+Symbolic links are identified separately; the deletion implementation is intended not to traverse a link to its target.
 
-## Security Notice
+## Search
 
-**Do not expose this file manager publicly without proper access protection.**
+### Current-directory search
 
-Recommended precautions:
+The search field uses JavaScript to filter the rows in the currently open directory. It does not search the complete filesystem or directories that have not been opened.
 
-- Protect the application with authentication.
-- Restrict access to trusted users and IP addresses.
-- Keep
+### System-wide indexed search
+
+A server-side indexed search across directories and files is planned and remains under development.
+
+## Security and Deployment
+
+**Do not expose this file manager to the public internet without adding suitable access protection.**
+
+This application can interact with the filesystem using the permissions of the PHP process. A mistake or unauthorized request can therefore have consequences beyond the browser interface.
+
+Before production deployment:
+
+1. Put the application behind authentication (for example, web-server authentication or an authenticated application gateway).
+2. Restrict access to trusted users and, where practical, trusted IP addresses or a private network.
+3. Use HTTPS.
+4. Run PHP with the least filesystem privileges needed for the intended directories and operations.
+5. Keep backups of files that may be edited or deleted.
+6. Disable features that are not required by setting their configuration options to `false`.
+7. Keep PHP error display disabled in production and send errors to server logs.
+8. Review and test path validation for every filesystem operation before allowing access to directories outside the application directory.
+
+The feature configuration array does not provide user authentication, authorization, or CSRF protection. Add appropriate access control and request protection at the application or web-server layer before public deployment.
+
+## Roadmap
+
+- [ ] System-wide indexed search
+- [ ] Additional file-management operations
+- [ ] Further UI and usability improvements
+- [ ] Additional security hardening and error handling
+- [ ] Add project screenshots and usage examples
+
+## License
+
+No license has been specified in this repository yet. Add a `LICENSE` file and update this section once the project license has been selected.
