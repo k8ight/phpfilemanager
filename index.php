@@ -3,12 +3,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 $config=[
+"dir"=> __DIR__,
 "editor"=>true,
 "viewer"=>true,
 "create_file"=>true,
 "delete_file"=>true
 ]; //"viewer"=true; means file musing video img view using openeditor editor  also textarea will be readonly unless editor is true (save button also render ins this case of editor true else no save button )
-
+if (!is_dir($config['dir']) || !chdir($config['dir'])) {
+    die('Unable to change to file manager directory.');
+}
 /* =====================================================
    K8 RECURSIVE DELETE
 ===================================================== */
@@ -856,10 +859,11 @@ if(isset($_POST['anf'])){
 function fp_perm($dec){
 return mask(substr(decoct($dec), -4));
 }
+
 if(isset($_REQUEST['dir'])){
-$directory =(empty($_REQUEST['dir'])? "./":$_REQUEST['dir']."/");
+    $directory =(empty($_REQUEST['dir'])? "./":$_REQUEST['dir']."/");
 }else{
-$directory ="./";
+    $directory ="./";
 }
 $cdir=rtrim($directory,"/");
 $blocked=array("index");
