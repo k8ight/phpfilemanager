@@ -209,4 +209,5 @@ The feature configuration array does not provide user authentication, authorizat
 
 ## License
 
-No license has been specified in this repository yet. Add a `LICENSE` file and update this section once the project license has been selected.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+See the [LICENSE](LICENSE) file for details.
