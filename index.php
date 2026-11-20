@@ -1407,7 +1407,7 @@ async function deleteEntry(encodedPath, encodedName) {
                         <button type="button"
                                 class="k8-button k8-grey"
                                 style="width:100%;"
-                                onclick="document.getElementById('modal').style.display='none'">
+                                onclick="document.getElementById('modal').style.display='none';v_blur();">
                             Cancel
                         </button>
                     </div>
