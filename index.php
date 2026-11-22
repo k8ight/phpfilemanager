@@ -420,6 +420,62 @@ if (empty($config['editor'])) {
     exit;
 }
 
+/* ---------------- ASYNC SIZE API ---------------- */
+if (
+    $_SERVER['REQUEST_METHOD'] === 'GET' &&
+    ($_GET['k8_action'] ?? '') === 'sizes'
+) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+
+    $root = realpath($config['dir']);
+    $relative = str_replace('\\', '/', (string)($_GET['dir'] ?? ''));
+    $relative = preg_replace('#^(?:\\./)+#', '', $relative);
+    $relative = trim($relative, '/');
+
+    if (
+        !$root ||
+        str_contains($relative, "\0") ||
+        preg_match('#(^|/)\\.\\.?(/|$)#', $relative)
+    ) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid directory.']);
+        exit;
+    }
+
+    $current = realpath($root . ($relative !== '' ? DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative) : ''));
+
+    if (
+        !$current ||
+        !is_dir($current) ||
+        ($current !== $root && strpos($current, $root . DIRECTORY_SEPARATOR) !== 0)
+    ) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Directory not allowed.']);
+        exit;
+    }
+
+    $sizes = [];
+
+    foreach (glob(rtrim($current, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '*', GLOB_NOSORT) ?: [] as $entry) {
+        if (is_link($entry)) {
+            continue;
+        }
+
+        $name = basename($entry);
+
+        if (is_dir($entry)) {
+            $sizes[$name] = pfs_fol_bytes($entry);
+        } elseif (is_file($entry)) {
+            $bytes = @filesize($entry);
+            $sizes[$name] = ($bytes === false) ? null : $bytes;
+        }
+    }
+
+    echo json_encode(['success' => true, 'sizes' => $sizes]);
+    exit;
+}
+
 /* ---------------- PHP SOURCE PREVIEW API ----------------
    GET index.php?k8_action=source&file=relative/path.php
 ---------------------------------------------------------- */
@@ -1042,7 +1098,7 @@ if(is_dir($dir))
 
 foreach($fol as $k){
 	
-	echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr><td class='mh'><a href='./?dir=".$k['link']."'><i class='fa-solid fa-folder k8-text-green'></i></a></td>
+	echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr data-size-name='".htmlspecialchars($k['name'], ENT_QUOTES, 'UTF-8')."' data-size-type='folder'><td class='mh'><a href='./?dir=".$k['link']."'><i class='fa-solid fa-folder k8-text-green'></i></a></td>
  <td colspan=2 class='k8-strong'><a class='k8-btn' href='./?dir=".$k['link']."'>".$k['name']." </a></td>
   <td>".$k['ext']." <br / ><a href='".$k['link']."' target='_blank'>< webopen ></a></td>
    <td>".$k['parm']."
@@ -1062,7 +1118,7 @@ foreach($fol as $k){
 foreach($fil as $k){
 	
 	
-echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr><td class='mh'><a href='./?dir=".$k['link']."'><i class='".icon($k['ext'])." k8-text-green'></a></td>
+echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr data-size-name='".htmlspecialchars($k['name'], ENT_QUOTES, 'UTF-8')."' data-size-type='file'><td class='mh'><a href='./?dir=".$k['link']."'><i class='".icon($k['ext'])." k8-text-green'></a></td>
  <td colspan=2 class='k8-strong'><a class='k8-btn' href='".(($config['viewer'])? "javascript:void(0)" : $k['link'] )."' onclick='".(($config['viewer'])? "openFile(this);" : "" )."' data-file='".base64_encode($k['link'])."'>".$k['name']." </a></td>
   <td>".$k['ext']."</td>
   <td>".$k['parm']."
@@ -1087,6 +1143,49 @@ echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"
 	
 <script src="./k8.js"></script>	
 	<script>
+async function loadEntrySizes() {
+    const rows = document.querySelectorAll('#uptable tr[data-size-name]');
+    if (!rows.length) return;
+
+    const apiURL = new URL(location.href);
+    apiURL.searchParams.set('k8_action', 'sizes');
+
+    try {
+        const response = await fetch(apiURL.href, {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const result = await response.json();
+        if (!result.success || !result.sizes) throw new Error(result.message || 'Size lookup failed.');
+
+        const formatSize = bytes => {
+            if (bytes === null || !Number.isFinite(Number(bytes))) return 'Unknown';
+            bytes = Number(bytes);
+            if (bytes === 0) return '0 Bytes';
+
+            const units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+            const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+            return (bytes / Math.pow(1024, index)).toFixed(2) + ' ' + units[index];
+        };
+
+        rows.forEach(row => {
+            const name = row.dataset.sizeName;
+            const cell = row.cells[5];
+
+            if (cell && Object.prototype.hasOwnProperty.call(result.sizes, name)) {
+                cell.textContent = formatSize(result.sizes[name]);
+            }
+        });
+    } catch (error) {
+        console.warn('Unable to load entry sizes:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadEntrySizes);
+
 	function searchTable(input) {
     var  filter, found, table, tr, td, i, j;
     filter = input.value.toUpperCase();
