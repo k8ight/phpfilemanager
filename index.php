@@ -1172,7 +1172,7 @@ async function loadEntrySizes() {
 
         rows.forEach(row => {
             const name = row.dataset.sizeName;
-            const cell = row.cells[5];
+            const cell = row.cells[4];
 
             if (cell && Object.prototype.hasOwnProperty.call(result.sizes, name)) {
                 cell.textContent = formatSize(result.sizes[name]);
