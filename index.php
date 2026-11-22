@@ -563,38 +563,48 @@ min-width:512px;
  </style>
 </head>
 <?php
-function pfs_fol($dir)
+function pfs_fol_bytes($dir)
 {
     $size = 0;
+    $items = @scandir($dir, SCANDIR_SORT_NONE);
 
+    if ($items === false) {
+        return 0;
+    }
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        $path = $dir . DIRECTORY_SEPARATOR . $item;
+
+        // Ignore symlinks to avoid loops and counting files outside this tree.
+        if (is_link($path)) {
+            continue;
+        }
+
+        if (is_dir($path)) {
+            $size += pfs_fol_bytes($path);
+        } elseif (is_file($path)) {
+            $bytes = @filesize($path);
+
+            if ($bytes !== false) {
+                $size += $bytes;
+            }
+        }
+    }
+
+    return $size;
+}
+
+function pfs_fol($dir)
+{
     if (!is_dir($dir) || !is_readable($dir)) {
         return pfs(0);
     }
 
-    try {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(
-                $dir,
-                FilesystemIterator::SKIP_DOTS
-            ),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
-
-        foreach ($iterator as $file) {
-            // Do not count symlink targets or follow directory symlinks.
-            if ($file->isFile() && !$file->isLink()) {
-                $filesize = $file->getSize();
-
-                if ($filesize !== false) {
-                    $size += $filesize;
-                }
-            }
-        }
-    } catch (UnexpectedValueException $e) {
-        // Ignore directories that cannot be accessed.
-    }
-
-    return pfs($size);
+    return pfs(pfs_fol_bytes($dir));
 }
 function pfs_fol_bits ($dir)
 {
