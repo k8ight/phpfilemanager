@@ -563,16 +563,38 @@ min-width:512px;
  </style>
 </head>
 <?php
-function pfs_fol ($dir)
+function pfs_fol($dir)
 {
-    $siz = 0;
+    $size = 0;
 
-    foreach (glob(rtrim($dir, '/').'/*', GLOB_NOSORT) as $each) {
-        $siz += is_file($each) ? filesize($each) : pfs_fol($each);
+    if (!is_dir($dir) || !is_readable($dir)) {
+        return pfs(0);
     }
-	$size=pfs($siz);
-	
-	return $size;
+
+    try {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $dir,
+                FilesystemIterator::SKIP_DOTS
+            ),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($iterator as $file) {
+            // Do not count symlink targets or follow directory symlinks.
+            if ($file->isFile() && !$file->isLink()) {
+                $filesize = $file->getSize();
+
+                if ($filesize !== false) {
+                    $size += $filesize;
+                }
+            }
+        }
+    } catch (UnexpectedValueException $e) {
+        // Ignore directories that cannot be accessed.
+    }
+
+    return pfs($size);
 }
 function pfs_fol_bits ($dir)
 {
