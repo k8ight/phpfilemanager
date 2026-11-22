@@ -1078,7 +1078,7 @@ if(is_dir($dir))
 	$time=filemtime($filx['dirname'].'/'.$filx['basename']);
 	$modtime= date("F d Y",$time);
 	$dirx=explode("/",$dir)[1];
-  $fol[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>"-",'ext'=>"< directory >","modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
+  $fol[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>"<i class='fa fa-spinner fa-spin'></i>",'ext'=>"< directory >","modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
 
 
 }else{
@@ -1091,7 +1091,7 @@ if(is_dir($dir))
 	$modtime= date("F d Y",$time);
 	$dirx=explode("/",$dir)[1];
 	if(!in_array($name,$blocked) || !in_array($extention,$blocked) || !in_array($basename,$blocked)){
-    $fil[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>'-','ext'=>$extention,"modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
+    $fil[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>'<i class="fa fa-spinner fa-spin"></i>','ext'=>$extention,"modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
 }}
 }
 
