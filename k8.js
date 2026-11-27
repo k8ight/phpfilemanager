@@ -288,8 +288,9 @@ function date(format, epoch = null, tzOffset = 330) { //PHP DATE FUNCTION IN JS 
   function addModal() {
     if (document.getElementById('modal')) return;
 
-    const html = `<div  class="k8-blur"></div>
-<div id="modal" class="k8-popup k8-white">
+    const html = `
+<div  id="modal" class="k8-blur k8-hide">
+<div class="k8-popup k8-white">
   <div class="head k8-indigo k8-padding">
     <div class="title">Dynamic Window</div>
     <button class="k8-btn k8-red" onclick="closeModal(this);">
@@ -300,7 +301,10 @@ function date(format, epoch = null, tzOffset = 330) { //PHP DATE FUNCTION IN JS 
   <div class="body k8-white k8-border k8-custom-border">
     <i class="fa fa-spinner fa-spin fa-4x"></i>
   </div>
-</div>`;
+</div>
+</div>
+
+`;
 
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -395,7 +399,21 @@ function form_handel(id="", trigger="", callback=null, url="./", success="✅ Ta
                 body: formData
             });
 
-            const result = await response.text();
+           let result = (await response.text()).trim();
+
+            try {
+                const data = JSON.parse(result);
+
+                if (data && typeof data === 'object') {
+                    const value = data.code ?? data.response;
+
+                    if (value !== undefined && value !== null) {
+                        result = String(value).trim();
+                    }
+                }
+            } catch (e) {}
+
+    
 
             notice.innerHTML = "";
 
@@ -444,12 +462,21 @@ function form_handel(id="", trigger="", callback=null, url="./", success="✅ Ta
 }
 
 
-function closeModal(el) {
-  const modal = el.closest('#modal, .k8-popup');
+async function closeModal(el) {
+  const modal = el.closest('#modal');
   if (!modal) return;
    v_blur();
- document.querySelector('#modal .body').innerHTML=` <span class="xloader">L &nbsp; ading</span>`;
-  modal.style.display = 'none';
+ document.querySelector('#modal .body').innerHTML=` <i class="fa fa-spinner fa-spin fa-4x k8-m-0 k8-auto"></i>`;
+ try {
+        if (typeof window.oncloseModal === 'function') {
+            await window.oncloseModal();
+        }
+    } catch (error) {
+        console.error('Modal close callback error:', error);
+    } finally {
+        modal.classList.add('k8-hide');
+    }
+  
 }
 
 function epoachjs(epochTime){
@@ -485,14 +512,30 @@ function k8_close() {
   overlayBg.style.display = "none";
 }
 
-function v_blur(){
-const blr=document.getElementsByClassName('k8-blur');
-for (let i = 0; i < blr.length; i++) { 
-if(blr[i].style.display==="block"){
-	blr[i].style.display="none";
-}else{
-blr[i].style.display="block";
-}}}
+function v_blur() {
+    const blr = document.getElementsByClassName('k8-blur');
+
+    for (let i = 0; i < blr.length; i++) {
+        if (blr[i].classList.contains('k8-hide')) {
+            blr[i].classList.remove('k8-hide');
+        } else {
+            blr[i].classList.add('k8-hide');
+        }
+    }
+}
+
+function toggle_modal() {
+    const blr = document.getElementsByClassName('k8-blur');
+
+    for (let i = 0; i < blr.length; i++) {
+        if (blr[i].classList.contains('k8-hide')) {
+            blr[i].classList.remove('k8-hide');
+        } else {
+            blr[i].classList.add('k8-hide');
+        }
+    }
+}
+
  function openInNewTab(imageElement) {
 	 //console.log(imageElement.src);
       window.open(imageElement.src, '_blank');

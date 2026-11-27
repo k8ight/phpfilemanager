@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --theme:#ff0000;
   --theme-text:#fff;
   --barback:#ff0000;
@@ -277,17 +277,7 @@ h1,h2,h3,h4,h5,h6{font-family:"Segoe UI",Arial,sans-serif;font-weight:400;margin
 .k8-cursor-pointer{
 	cursor:pointer;
 }
-.k8-blur{
-	display: none;
-  position: fixed;
-  z-index: 100;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(214, 223, 238, 0.4);
-  backdrop-filter: blur(4px);
-}
+
 .k8-altmtr::-moz-meter-bar { /* Firefox Pseudo Class */
   background: #f4511e;
 }
@@ -527,7 +517,7 @@ box-shadow: -2px 8px 15px #8a795d,
 	 background-color:#ffffff;
 	 overflow:auto;
 }
-@media (max-width:500px){
+@media (max-width:600px){
 	body{width:100%;}
 	.k8-table{
 		overflow:scroll;
@@ -558,6 +548,13 @@ max-height:80vh;
 }
 .k8-short a{font-size: 0;}
 .k8-short a:after{font-size: 18px;content: "KOC v-0.5";display:inline-block;}
+
+
+.k8-popup>.head>div{
+	font-size:14px;
+	
+}
+
 }
 .fx{
 	text-align:center;
@@ -608,10 +605,20 @@ max-height:80vh;
 	border-right:1px solid;
 }
 
+.k8-blur{	
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow:hidden;
+  background-color: rgba(214, 223, 238, 0.4);
+  backdrop-filter: blur(4px);
+}
 
 .k8-popup{
-	display:none;
-	position: fixed;
+	position: absolute;
 	width:98%;
   max-width: 1024px;
   z-index: 101;
@@ -652,7 +659,6 @@ top:4px;
 	overflow-y:scroll;
 	max-height:85vh;
 }
-
 
 
 

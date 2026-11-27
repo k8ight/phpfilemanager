@@ -566,8 +566,8 @@ if (
  <link rel="preconnect" href="https://cdn.k8ight.com">
  <link rel="stylesheet" href="./k8.css">
  
- <link rel="stylesheet" href="https://cdn.k8ight.com/fontawesome/6.4.2/css/all.min.css">
- 
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.css" >
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/4.1.0/jquery.min.js"></script>
  
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
@@ -615,6 +615,15 @@ min-width:512px;
 	z-index:50;
 	margin:8px auto;
 	transform:translate(-50%,0%);
+}
+
+.k8-table td, .k8-table th, .k8-table-all td, .k8-table-all th {
+  padding: 8px 8px;
+  display: table-cell;
+  text-align: left;
+  vertical-align: middle;
+  word-break: keep-all;
+  white-space: nowrap;
 }
  </style>
 </head>
@@ -1001,11 +1010,15 @@ function mask($param){
 	return $ret;
 }
 function is_site($dir){
-	if(file_exists($dir."/index.php")||file_exists($dir."/index.html")){
-		return true;
-	}else{
-		return false;
-	}
+    $files = glob(rtrim($dir, '/\\') . DIRECTORY_SEPARATOR . 'index.*', GLOB_NOSORT);
+
+    foreach ($files ?: [] as $file) {
+        if (is_file($file)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 if(isset($_POST['anf'])){
 	$cdirx=$_POST['cdir'];
@@ -1031,34 +1044,64 @@ if(isset($_REQUEST['dir'])){
 $cdir=rtrim($directory,"/");
 
 ?>
-<body style="overflow-x:scroll">
-<div class="k8-card k8-white k8-center k8-border k8-row nff" >
-<div class="k8-col s9 k8-left-align k8-margin" style="font-size:50%;"><i class="fa-regular fa-folder-open" style="font-size:initial;"></i> : <?php echo $directory;?></div>
-<div class="k8-col s1 k8-right-align k8-margin"><button class="k8-button k8-green" onclick="this.parentElement.parentElement.style='display:none;';"><i class="fa-solid fa-xmark"></i></button></div>
-<form action="" method="post" class="k8-padding">
-<input type="hidden" name="cdir" value="<?php echo $directory; ?>" />
-<input type="text" name="nf" class="k8-input" required placeholder="NEW FILE (*.*) /FOLDER (*) NAME"  />
-<button type="submit" name="anf" class="k8-button k8-green k8-margin-top" onclick="return confirm('New file / folder will be created on the following directory as : <?php echo $directory;?>'+this.previousElementSibling.value);"><i class="fa-solid fa-square-plus"></i> CREATE / ADD</button>
-<h6 class="k8-text-red">Use format *.* for adding file 7 use * as to add folder<br />[demo file hello.txt/ for folder hello]</h6>
-</form>
+<body>
+<div class="k8-row k8-theme" style="height:48px;">
+<div class="k8-col" style="flex-basis: 48px;max-width: 48px;"><a href="./"><img src="https://k8ight.com/favicon.ico" title="LOGO" alt="LOGO" style="height:48px;aspect-ratio:1/1;" /></a></div>
+<div class="k8-col"  style="flex-basis: calc(66% - 48px);max-width:400px;">
+<fieldset class="k8-b-0 k8-m-0"><input type="text" placeholder="Search Table...." class="k8-input k8-border k8-border-indigo"  onkeyup="searchTable(this)"></fieldset>
 </div>
- <div class="k8-padding" >
+
+<div class="k8-col " style="flex-basis:33.33%;max-width:100%;"> <fieldset class="k8-b-0 k8-m-0 k8-p-0">
+
+<a href="./?dir=<?php echo ((substr($cdir, 0, strrpos($cdir, '/'))==".")? "":substr($cdir, 0, strrpos($cdir, '/')));?>" title="BACK">
+<button class="k8-btn" type="button"><i class="fa-solid fa-turn-up" style="transform:rotate(270deg);font-size:24px;"></i></button></a>
+ 
+<button type="button" class="k8-btn" onclick="add()" style="font-size:24px;"><i class="fa-solid fa-file-circle-plus"></i></button>
+</div>
+</fieldset></div>
+
+ <div class="k8-padding" style="overflow:auto;" >
  <table class="k8-table k8-bordered k8-border k8-white">
 <tr style="font-size:18px;">
-<th colspan="6" class="k8-indigo"><i class="fa-regular fa-folder-open"></i> K8-CDN : <?php echo ((substr($directory, 0, strrpos($directory, '/'))==".")? "< root >":substr($directory, 0, strrpos($directory, '/')));?></th>
-<th colspan="1" class="k8-indigo"><div style="min-width:220px;">
-<a href="./?dir=<?php echo ((substr($cdir, 0, strrpos($cdir, '/'))==".")? "":substr($cdir, 0, strrpos($cdir, '/')));?>" title="BACK"><button class="k8-button"><i class="fa-solid fa-right-to-bracket" style="transform:rotate(180deg);"></i></button></a>
-</div>
+<?php
+$crumbPath = str_replace('\\', '/', $directory);
+$crumbPath = preg_replace('#^(?:\./)+#', '', $crumbPath);
+$crumbPath = trim($crumbPath, '/');
+
+$crumbParts = ($crumbPath === '') ? [] : explode('/', $crumbPath);
+$builtPath = [];
+?>
+
+<th colspan="7" class="k8-indigo k8-small">
+    <nav style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
+        <a href="./" style="color:inherit;text-decoration:none;">
+            <i class="fa-solid fa-house"></i> Home
+        </a>
+
+        <?php foreach ($crumbParts as $part):
+            $builtPath[] = $part;
+
+            $dirLink = './?dir=./' .
+                implode('/', array_map('rawurlencode', $builtPath));
+        ?>
+            <i class="fa-solid fa-chevron-right"></i>
+
+            <a href="<?= htmlspecialchars($dirLink, ENT_QUOTES, 'UTF-8') ?>"
+               style="color:inherit;text-decoration:none;">
+                <i class="fa-solid fa-folder-open"></i>
+                <?= htmlspecialchars($part, ENT_QUOTES, 'UTF-8') ?>
+            </a>
+
+        <?php endforeach; ?>
+
+    </nav>
 </th>
 </tr>
 
 <tr class="k8-green">
 <th class='mh'>#</th>
-<th colspan="2" style="min-width:256px;">Name <input type="text" placeholder="Search Table...." class="filter k8-border k8-border-indigo" style="max-width:256px;float:right;" onkeyup="searchTable(this)"> <?php if (!empty($config['create_file'])): ?>
-<button type="button" class="k8-indigo"
-        onclick="add()" style="float:right;">
-    <i class="fa-solid fa-plus"></i> ADD
-</button>
+<th colspan="2" style="min-width:256px;">Name  <?php if (!empty($config['create_file'])): ?>
 <?php endif; ?></th>
 <th >Type</th>
 <th >Param</th>
@@ -1076,9 +1119,9 @@ if(is_dir($dir))
     $filx = pathinfo($dir);
 
 	$time=filemtime($filx['dirname'].'/'.$filx['basename']);
-	$modtime= date("F d Y",$time);
+	$modtime= date("d-M-Y H:i:s",$time);
 	$dirx=explode("/",$dir)[1];
-  $fol[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>"<i class='fa fa-spinner fa-spin'></i>",'ext'=>"< directory >","modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
+  $fol[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>"<i class='fa fa-spinner fa-spin'></i>",'ext'=>"Directory","modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
 
 
 }else{
@@ -1088,7 +1131,7 @@ if(is_dir($dir))
 	$basename=$filx['basename'];
 	$extention=$filx['extension'] ?? $name.'-File';
 	$time=filemtime($filx['dirname'].'/'.$filx['basename']);
-	$modtime= date("F d Y",$time);
+	$modtime= date("d-M-Y H:i:s",$time);
 	$dirx=explode("/",$dir)[1];
 	if(!in_array($name,$blocked) || !in_array($extention,$blocked) || !in_array($basename,$blocked)){
     $fil[] = array ('name'=>basename($dir),'parent'=>$dirx,'size'=>'<i class="fa fa-spinner fa-spin"></i>','ext'=>$extention,"modtime"=>$modtime,"parm"=>fp_perm(fileperms($dir)),"link"=>$dir);
@@ -1099,15 +1142,11 @@ foreach($fol as $k){
 	
 	echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr data-size-name='".htmlspecialchars($k['name'], ENT_QUOTES, 'UTF-8')."' data-size-type='folder'><td class='mh'><a href='./?dir=".$k['link']."'><i class='fa-solid fa-folder k8-text-green'></i></a></td>
  <td colspan=2 class='k8-strong'><a class='k8-btn' href='./?dir=".$k['link']."'>".$k['name']." </a></td>
-  <td>".$k['ext']." <br / ><a href='".$k['link']."' target='_blank'>< webopen ></a></td>
+  <td>".$k['ext']." ". ((is_site($k['link']))? "<div ><a href='".$k['link']."' target='_blank'>< webopen ></a></div>" : "" )." </td>
    <td>".$k['parm']."
 ".(!empty($config['delete_file']) ? "
 <br>
-<button type='button'
-        class='k8-red'
-        onclick=\"deleteEntry('".base64_encode($k['link'])."','".base64_encode($k['name'])."')\">
-    <i class='fa-solid fa-trash'></i> Delete
-</button>
+<a href='#' class='k8-text-red k8-strong' onclick='event.preventDefault(); deleteEntry(this);'  data-link='".base64_encode($k['link'])."' data-name='".base64_encode($k['name'])."'> < Delete > </button>
 " : "")."
 </td>
   <td>".$k['size']."</td>
@@ -1117,17 +1156,15 @@ foreach($fol as $k){
 foreach($fil as $k){
 	
 	
-echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr data-size-name='".htmlspecialchars($k['name'], ENT_QUOTES, 'UTF-8')."' data-size-type='file'><td class='mh'><a href='./?dir=".$k['link']."'><i class='".icon($k['ext'])." k8-text-green'></a></td>
+echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"<tr data-size-name='".htmlspecialchars($k['name'], ENT_QUOTES, 'UTF-8')."' data-size-type='file'>
+<td class='mh'><a href='".(($config['viewer'])? "javascript:void(0)" : $k['link'] )."' onclick='".(($config['viewer'])? "openFile(this);" : "" )."' data-file='".base64_encode($k['link'])."'><i class='".icon($k['ext'])." k8-text-green'></a></td>
+
  <td colspan=2 class='k8-strong'><a class='k8-btn' href='".(($config['viewer'])? "javascript:void(0)" : $k['link'] )."' onclick='".(($config['viewer'])? "openFile(this);" : "" )."' data-file='".base64_encode($k['link'])."'>".$k['name']." </a></td>
   <td>".$k['ext']."</td>
   <td>".$k['parm']."
 ".(!empty($config['delete_file']) ? "
-<br>
-<button type='button'
-        class='k8-red'
-        onclick=\"deleteEntry('".base64_encode($k['link'])."','".base64_encode($k['name'])."')\">
-    <i class='fa-solid fa-trash'></i> Delete
-</button>
+<div>
+<a href='#' class='k8-text-red k8-strong' onclick='event.preventDefault(); deleteEntry(this);'  data-link='".base64_encode($k['link'])."' data-name='".base64_encode($k['name'])."'> < Delete > </button></div>
 " : "")."
 </td>
   <td>".$k['size']."</td>
@@ -1138,7 +1175,9 @@ echo ((in_array($k['name'], $blocked)&& substr( $string_n, 0, 1 )!== ".")? "" :"
 </tbody>
 </table>
 <h6 class="k8-text-red"> Leading . file/folder & index is hidden here.also can use blocked array to block more</h6>
-    </div>
+</div>
+	
+	
 	
 <script src="./k8.js"></script>	
 	<script>
@@ -1357,7 +1396,10 @@ async function createEntry(type) {
    K8 DELETE UI
 ===================================================== */
 
-async function deleteEntry(encodedPath, encodedName) {
+async function deleteEntry(e) {
+	const encodedPath= e.dataset.link;
+	const encodedName=e.dataset.name;
+	
     if (K8_CONFIG?.delete_file !== true) return;
 
     const file = atob(encodedPath);
@@ -1921,7 +1963,7 @@ K8_CONFIG?.viewer === true;
     `;
 
     if (modal.style.display !== 'block') {
-        modal.style.display = 'block';
+      
         v_blur();
     }
 
